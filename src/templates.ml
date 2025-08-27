@@ -494,9 +494,10 @@ let layout ~title ~content ?(meta_tags="") () =
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>%s</title>
-    <link rel="icon" type="image/png" href="https://rastrian.dev/assets/img/favicon.png">
-    %s
-    <style>%s</style>
+      <link rel="icon" type="image/png" href="https://rastrian.dev/assets/img/favicon.png">
+  <link rel="alternate" type="application/rss+xml" title="Rastrian Blog RSS Feed" href="/rss.xml">
+  %s
+  <style>%s</style>
 </head>
 <body>
     <div class="container">
@@ -508,6 +509,7 @@ let layout ~title ~content ?(meta_tags="") () =
             <a href="https://rastrian.dev">Home</a>
             <a href="/">Posts</a>
             <a href="/tags">Tags</a>
+            <a href="/rss.xml" title="Subscribe to RSS feed">RSS</a>
         </nav>
         <main>%s</main>
         <footer class="footer">
@@ -580,6 +582,83 @@ let create_slug title =
   |> sanitize
   |> remove_consecutive_dashes
   |> trim_dashes
+
+let escape_xml text =
+  let text = Str.global_replace (Str.regexp "&") "&amp;" text in
+  let text = Str.global_replace (Str.regexp "<") "&lt;" text in
+  let text = Str.global_replace (Str.regexp ">") "&gt;" text in
+  let text = Str.global_replace (Str.regexp "\"") "&quot;" text in
+  let text = Str.global_replace (Str.regexp "'") "&#39;" text in
+  text
+
+let format_rss_date date_str =
+  try
+    (* Convert ISO 8601 to RFC 822 format *)
+    let parts = String.split_on_char 'T' date_str in
+    match parts with
+    | date_part :: time_part :: _ ->
+        let date_parts = String.split_on_char '-' date_part in
+        let months = [|"Jan"; "Feb"; "Mar"; "Apr"; "May"; "Jun";
+                     "Jul"; "Aug"; "Sep"; "Oct"; "Nov"; "Dec"|] in
+        (match date_parts with
+         | year :: month :: day :: _ ->
+             let month_int = int_of_string month in
+             let month_name = months.(month_int - 1) in
+             let time_clean = if String.contains time_part 'Z' then
+                 String.sub time_part 0 (String.index time_part 'Z')
+               else time_part
+             in
+             Printf.sprintf "%s %s %s %s +0000" day month_name year time_clean
+         | _ -> date_str)
+    | _ -> date_str
+  with _ -> date_str
+
+let generate_rss_item post =
+  let slug = create_slug post.title in
+  let content = match post.body with
+    | Some body -> Cmarkit.Doc.of_string body |> Cmarkit_html.of_doc ~safe:false
+    | None -> "No content available."
+  in
+  Printf.sprintf {|
+    <item>
+      <title>%s</title>
+      <link>https://blog.rastrian.dev/post/%s</link>
+      <description><![CDATA[%s]]></description>
+      <author>%s</author>
+      <guid isPermaLink="true">https://blog.rastrian.dev/post/%s</guid>
+      <pubDate>%s</pubDate>
+    </item>|}
+    (escape_xml post.title)
+    slug
+    content
+    (escape_xml post.author)
+    slug
+    (format_rss_date post.created_at)
+
+let generate_rss_feed posts =
+  let items = List.map generate_rss_item posts |> String.concat "\n" in
+  let last_build_date = match posts with
+    | post :: _ -> format_rss_date post.created_at
+    | [] -> format_rss_date (Printf.sprintf "%fZ" (Unix.time ()))
+  in
+  Printf.sprintf {|<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rastrian Blog</title>
+    <link>https://blog.rastrian.dev</link>
+    <description>Software Engineer passionate about backend development, DevOps, and functional programming</description>
+    <language>en-us</language>
+    <managingEditor>me@rastrian.dev (Luis Vaz)</managingEditor>
+    <webMaster>me@rastrian.dev (Luis Vaz)</webMaster>
+    <lastBuildDate>%s</lastBuildDate>
+    <atom:link href="https://blog.rastrian.dev/rss.xml" rel="self" type="application/rss+xml"/>
+    <generator>OCaml Blog Generator</generator>
+    <ttl>60</ttl>
+%s
+  </channel>
+</rss>|}
+    last_build_date
+    items
 
 let extract_first_image content =
   (* Try to find markdown images first: ![alt](url) *)

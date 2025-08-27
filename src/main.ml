@@ -68,6 +68,12 @@ let () =
       html (Templates.tag_page tag posts)
     );
     
+    get "/rss.xml" (fun _ ->
+      let* posts = get_posts () in
+      let rss_content = Templates.generate_rss_feed posts in
+      respond ~headers:[("Content-Type", "application/rss+xml; charset=utf-8")] rss_content
+    );
+    
     get "/**" (fun _ ->
       html ~status:`Not_Found Templates.not_found_page
     );
