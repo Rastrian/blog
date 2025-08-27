@@ -436,6 +436,21 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', newTheme);
   localStorage.setItem('theme', newTheme);
   updateThemeButton(newTheme);
+  updateGiscusTheme(newTheme);
+}
+
+function updateGiscusTheme(theme) {
+  const giscusFrame = document.querySelector('iframe[src*="giscus"]');
+  if (giscusFrame) {
+    const giscusTheme = theme === 'light' ? 'light' : 'dark';
+    giscusFrame.contentWindow.postMessage({
+      giscus: {
+        setConfig: {
+          theme: giscusTheme
+        }
+      }
+    }, 'https://giscus.app');
+  }
 }
 
 function updateThemeButton(theme) {
@@ -453,6 +468,12 @@ document.addEventListener('DOMContentLoaded', function() {
   if (themeButton) {
     themeButton.addEventListener('click', toggleTheme);
   }
+  
+  // Set initial Giscus theme after comments load
+  setTimeout(function() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    updateGiscusTheme(currentTheme);
+  }, 2000);
 });
 
 // Listen for system theme changes
@@ -461,6 +482,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fun
     const theme = e.matches ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
     updateThemeButton(theme);
+    updateGiscusTheme(theme);
   }
 });
 |}
@@ -592,7 +614,7 @@ let generate_blog_meta_tags () =
 
 let generate_post_meta_tags post =
   let description = match post.body with
-    | Some body -> extract_description body 155
+    | Some body -> extract_description body 256
     | None -> "Read this post on Rastrian's blog about life, functional programming, and software development"
   in
   let post_url = Printf.sprintf "https://blog.rastrian.dev/post/%s" (create_slug post.title) in
@@ -644,6 +666,7 @@ let render_post_preview post =
       String.concat "\n" preview_lines ^ (if List.length lines > 3 then "..." else "")
     | None -> "No content available."
   in
+  let markdown_preview = Cmarkit.Doc.of_string preview |> Cmarkit_html.of_doc ~safe:false in
   let slug = create_slug post.title in
   Printf.sprintf {|
     <article class="post">
@@ -654,7 +677,7 @@ let render_post_preview post =
         <div class="post-content markdown-content">%s</div>
         <div class="tags">%s</div>
     </article>
-  |} slug post.title post.author (format_date post.created_at) preview (render_tags post.labels)
+  |} slug post.title post.author (format_date post.created_at) markdown_preview (render_tags post.labels)
 
 let render_post_full post =
   let content = match post.body with
