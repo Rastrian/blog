@@ -141,6 +141,96 @@ blockquote {
   font-style: italic;
 }
 
+/* Improved markdown content styling */
+.markdown-content {
+  line-height: 1.7;
+}
+
+.markdown-content p {
+  margin-bottom: 1rem;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.markdown-content h1, .markdown-content h2, .markdown-content h3, 
+.markdown-content h4, .markdown-content h5, .markdown-content h6 {
+  margin: 1.5rem 0 1rem 0;
+  line-height: 1.3;
+  color: var(--accent-color);
+}
+
+.markdown-content h1 { font-size: 2rem; }
+.markdown-content h2 { font-size: 1.7rem; }
+.markdown-content h3 { font-size: 1.4rem; }
+.markdown-content h4 { font-size: 1.2rem; }
+.markdown-content h5 { font-size: 1.1rem; }
+.markdown-content h6 { font-size: 1rem; }
+
+.markdown-content code {
+  background: var(--code-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid var(--accent-color);
+  padding: 0.5rem 0 0.5rem 1rem;
+  margin: 1.5rem 0;
+  background: var(--code-bg);
+  border-radius: 0 4px 4px 0;
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  width: 100%;
+}
+
+.markdown-content th, .markdown-content td {
+  border: 1px solid var(--border-color);
+  padding: 0.7rem;
+  text-align: left;
+}
+
+.markdown-content th {
+  background: var(--secondary-color);
+  font-weight: bold;
+}
+
+.markdown-content hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background-color: var(--border-color);
+  border: 0;
+  border-radius: 1px;
+}
+
 a {
   color: var(--link-color);
   text-decoration: none;
@@ -291,6 +381,22 @@ img {
   .footer-content p {
     font-size: 0.85rem;
     margin: 0.4rem 0;
+  }
+  
+  /* Mobile markdown content */
+  .markdown-content h1 { font-size: 1.6rem; }
+  .markdown-content h2 { font-size: 1.4rem; }
+  .markdown-content h3 { font-size: 1.2rem; }
+  .markdown-content h4 { font-size: 1.1rem; }
+  
+  .markdown-content ul, .markdown-content ol {
+    padding-left: 1.5rem;
+  }
+  
+  .markdown-content pre {
+    padding: 0.8rem;
+    margin: 1rem 0;
+    overflow-x: auto;
   }
   
   .pagination {
@@ -538,7 +644,6 @@ let render_post_preview post =
       String.concat "\n" preview_lines ^ (if List.length lines > 3 then "..." else "")
     | None -> "No content available."
   in
-  let markdown_preview = Omd.of_string preview |> Omd.to_html in
   let slug = create_slug post.title in
   Printf.sprintf {|
     <article class="post">
@@ -546,14 +651,14 @@ let render_post_preview post =
         <div class="post-meta">
             By <strong>%s</strong> on %s
         </div>
-        <div class="post-content">%s</div>
+        <div class="post-content markdown-content">%s</div>
         <div class="tags">%s</div>
     </article>
-  |} slug post.title post.author (format_date post.created_at) markdown_preview (render_tags post.labels)
+  |} slug post.title post.author (format_date post.created_at) preview (render_tags post.labels)
 
 let render_post_full post =
   let content = match post.body with
-    | Some body -> Omd.of_string body |> Omd.to_html
+    | Some body -> Cmarkit.Doc.of_string body |> Cmarkit_html.of_doc ~safe:false
     | None -> "<p>No content available.</p>"
   in
   Printf.sprintf {|
@@ -563,7 +668,7 @@ let render_post_full post =
             By <strong>%s</strong> on %s
             <br><a href="%s" target="_blank">View on GitHub</a>
         </div>
-        <div class="post-content">%s</div>
+        <div class="post-content markdown-content">%s</div>
         <div class="tags">%s</div>
     </article>
     

@@ -119,6 +119,39 @@ let fetch_issue number =
     Printf.eprintf "Failed to parse issue %d\n%!" number;
     Lwt.return None
 
+let render_markdown_with_github content =
+  let url = Printf.sprintf "%s/markdown" api_base in
+  let headers = Cohttp.Header.of_list (
+    ("Content-Type", "application/json") :: (make_headers ())
+  ) in
+  let escaped_content = Str.global_replace (Str.regexp "\"") "\\\"" content in
+  let escaped_content = Str.global_replace (Str.regexp "\n") "\\n" escaped_content in
+  let body = Printf.sprintf {|{"text":"%s","mode":"gfm","context":"%s/%s"}|}
+    escaped_content repo_owner repo_name in
+  let* response, response_body = Cohttp_lwt_unix.Client.post ~headers ~body:(Cohttp_lwt.Body.of_string body) (Uri.of_string url) in
+  let* html_string = Cohttp_lwt.Body.to_string response_body in
+  match Cohttp.Response.status response with
+  | `OK -> Lwt.return html_string
+  | _ -> 
+    Printf.eprintf "GitHub markdown API failed, falling back to simple rendering\n%!";
+    (* Simple fallback: preserve line breaks and basic formatting *)
+    let lines = String.split_on_char '\n' content in
+    let html_lines = List.map (fun line ->
+      let trimmed = String.trim line in
+      if trimmed = "" then "<br/>"
+      else if String.length trimmed > 0 && trimmed.[0] = '#' then
+        let level = ref 0 in
+        String.iter (fun c -> if c = '#' then incr level) trimmed;
+        let level = min 6 !level in
+        let title = String.trim (String.sub trimmed level (String.length trimmed - level)) in
+        Printf.sprintf "<h%d>%s</h%d>" level title level
+      else if String.length trimmed > 2 && String.sub trimmed 0 2 = "- " then
+        Printf.sprintf "<ul><li>%s</li></ul>" (String.sub trimmed 2 (String.length trimmed - 2))
+      else
+        Printf.sprintf "<p>%s</p>" trimmed
+    ) lines in
+    Lwt.return (String.concat "\n" html_lines)
+
 let find_issue_by_slug slug posts =
   let create_slug title =
     let sanitize s =

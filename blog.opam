@@ -11,7 +11,7 @@ depends: [
   "dream"
   "cohttp-lwt-unix"
   "yojson"
-  "omd"
+  "cmarkit"
 ]
 build: [
   ["dune" "subst"] {pinned}
