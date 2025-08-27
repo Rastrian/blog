@@ -1,0 +1,10 @@
+(executable
+ (public_name blog)
+ (name main)
+ (libraries
+  dream
+  cohttp-lwt-unix
+  yojson
+  omd
+  str))
+

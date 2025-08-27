@@ -1,0 +1,48 @@
+# OCaml
+*.cmi
+*.cmo
+*.cmx
+*.cma
+*.cmxa
+*.a
+*.o
+*.obj
+*.lib
+*.dll
+*.so
+*.dylib
+_build/
+*.install
+*.merlin
+.bsb.lock
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Runtime
+*.pid
+
+# Docker
+# .dockerignore
+
+# SSL certificates (if added)
+ssl/
+
+# Environment files with secrets
+.env
+.env.local
+.env.production
+
+# Cloudflare tunnel credentials
+cloudflared/*

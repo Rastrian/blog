@@ -1,0 +1,29 @@
+# Build artifacts
+_build/
+*.install
+*.merlin
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker files (except the one we need)
+docker-compose.yml
+nginx.conf
