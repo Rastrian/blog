@@ -5,7 +5,7 @@ let posts_cache = ref []
 let last_update = ref 0.0
 
 let cache_duration = 900.0 (* 15 minutes *)
-let posts_per_page = 5
+let posts_per_page = 3
 
 let get_posts () =
   let now = Unix.time () in

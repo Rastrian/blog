@@ -528,7 +528,24 @@ let layout ~title ~content ?(meta_tags="") () =
 let format_date date_str =
   try
     let parts = String.split_on_char 'T' date_str in
-    List.hd parts
+    match parts with
+    | date_part :: time_part :: _ ->
+        let time_without_z = 
+          if String.contains time_part 'Z' then
+            String.sub time_part 0 (String.index time_part 'Z')
+          else if String.contains time_part '+' then
+            String.sub time_part 0 (String.index time_part '+')
+          else
+            time_part
+        in
+        let time_parts = String.split_on_char ':' time_without_z in
+        let hour_min = match time_parts with
+          | hour :: minute :: _ -> Printf.sprintf "%s:%s" hour minute
+          | _ -> "00:00"
+        in
+        Printf.sprintf "%s at %s UTC" date_part hour_min
+    | [date_part] -> date_part
+    | _ -> date_str
   with _ -> date_str
 
 let extract_description text max_length =
@@ -614,7 +631,7 @@ let generate_blog_meta_tags () =
 
 let generate_post_meta_tags post =
   let description = match post.body with
-    | Some body -> extract_description body 256
+    | Some body -> extract_description body 512
     | None -> "Read this post on Rastrian's blog about life, functional programming, and software development"
   in
   let post_url = Printf.sprintf "https://blog.rastrian.dev/post/%s" (create_slug post.title) in
