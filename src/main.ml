@@ -83,6 +83,16 @@ let () =
       respond ~headers:[("Content-Type", "application/rss+xml; charset=utf-8")] rss_content
     );
     
+    get "/rss.xsl" (fun _ ->
+      let xsl_content = Templates.generate_rss_xsl () in
+      respond ~headers:[("Content-Type", "application/xsl+xml; charset=utf-8")] xsl_content
+    );
+    
+    get "/feed" (fun request ->
+      let theme = get_theme_from_request request in
+      html (Templates.rss_page theme)
+    );
+    
     get "/api/theme/:theme" (fun request ->
       let theme = param request "theme" in
       if theme = "light" || theme = "dark" then

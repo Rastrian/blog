@@ -526,7 +526,7 @@ let layout ~title ~content ?(meta_tags="") ~theme () =
             <a href="https://rastrian.dev">Home</a>
             <a href="/">Posts</a>
             <a href="/tags">Tags</a>
-            <a href="/rss.xml" title="Subscribe to RSS feed">RSS</a>
+            <a href="/feed">RSS Feed</a>
         </nav>
         <main>%s</main>
         <footer class="footer">
@@ -659,6 +659,7 @@ let generate_rss_feed posts =
     | [] -> format_rss_date (Printf.sprintf "%fZ" (Unix.time ()))
   in
   Printf.sprintf {|<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/rss.xsl"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Rastrian Blog</title>
@@ -676,6 +677,139 @@ let generate_rss_feed posts =
 </rss>|}
     last_build_date
     items
+
+let generate_rss_xsl () = {|<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:output method="html" encoding="UTF-8" doctype-public="-//W3C//DTD XHTML 1.0 Transitional//EN" doctype-system="http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"/>
+  
+  <xsl:template match="/">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+        <title><xsl:value-of select="rss/channel/title"/> - RSS Feed</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <style>
+          body {
+            font-family: 'Courier New', monospace;
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+          }
+          .container {
+            max-width: 800px;
+            margin: 0 auto;
+          }
+          .rss-info {
+            background: #1a1a1a;
+            border: 2px solid #00ff41;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+          }
+          .rss-info h2 {
+            color: #00ff41;
+            margin-top: 0;
+            font-size: 1.5rem;
+          }
+          .rss-info p {
+            margin-bottom: 15px;
+          }
+          .rss-url {
+            background: #333;
+            border: 1px solid #555;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+            color: #00ff41;
+          }
+          .feed-header {
+            border-bottom: 2px solid #00ff41;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+          }
+          .feed-title {
+            font-size: 2rem;
+            color: #00ff41;
+            margin: 0;
+          }
+          .feed-description {
+            color: #ccc;
+            font-size: 1.1rem;
+            margin: 10px 0 0 0;
+          }
+          .item {
+            margin-bottom: 30px;
+            border: 1px solid #444;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 6px;
+          }
+          .item-title {
+            font-size: 1.3rem;
+            margin: 0 0 10px 0;
+          }
+          .item-title a {
+            color: #00ff41;
+            text-decoration: none;
+          }
+          .item-title a:hover {
+            text-decoration: underline;
+          }
+          .item-meta {
+            color: #999;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+          }
+          .item-description {
+            color: #ddd;
+          }
+          .about-link {
+            color: #00ff41;
+            text-decoration: none;
+          }
+          .about-link:hover {
+            text-decoration: underline;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="rss-info">
+            <h2>📡 This is a Web Feed (RSS Feed)</h2>
+            <p><strong>This is a web feed, also known as an RSS feed.</strong> Subscribe by copying the URL from the address bar into your newsreader.</p>
+            <p>Visit <a href="https://aboutfeeds.com" class="about-link">About Feeds</a> to get started with newsreaders and subscribing. It's free.</p>
+            <p><strong>Feed URL:</strong></p>
+            <div class="rss-url"><xsl:value-of select="rss/channel/atom:link/@href"/></div>
+          </div>
+          
+          <div class="feed-header">
+            <h1 class="feed-title"><xsl:value-of select="rss/channel/title"/></h1>
+            <p class="feed-description"><xsl:value-of select="rss/channel/description"/></p>
+          </div>
+          
+          <h2 style="color: #00ff41; margin-bottom: 20px;">RSS Feed Preview</h2>
+          
+          <xsl:for-each select="rss/channel/item">
+            <div class="item">
+              <h3 class="item-title">
+                <a href="{link}"><xsl:value-of select="title"/></a>
+              </h3>
+              <div class="item-meta">
+                Published: <xsl:value-of select="pubDate"/> | By: <xsl:value-of select="author"/>
+              </div>
+              <div class="item-description">
+                <xsl:value-of select="description" disable-output-escaping="yes"/>
+              </div>
+            </div>
+          </xsl:for-each>
+        </div>
+      </body>
+    </html>
+  </xsl:template>
+</xsl:stylesheet>|}
 
 let extract_first_image content =
   (* Try to find markdown images first: ![alt](url) *)
@@ -900,4 +1034,51 @@ let tag_page tag posts theme =
       <h1>Posts tagged '%s'</h1>
       %s
     |} tag posts_html) ~theme ()
+
+let rss_page theme =
+  layout ~title:"RSS Feed - rastrian blog" ~content:{|
+    <div style="max-width: 700px;">
+      <h1>📡 RSS Feed</h1>
+      
+      <div style="background: var(--code-bg); border: 2px solid var(--accent-color); border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+        <h2 style="color: var(--accent-color); margin-top: 0;">What is RSS?</h2>
+        <p><strong>This is a web feed, also known as an RSS feed.</strong> Subscribe by copying the URL from the address bar into your newsreader.</p>
+        <p>Visit <a href="https://aboutfeeds.com" style="color: var(--accent-color);">About Feeds</a> to get started with newsreaders and subscribing. It's free.</p>
+      </div>
+
+      <h2>🔗 Feed URL</h2>
+      <div style="background: var(--secondary-color); border: 1px solid var(--border-color); padding: 15px; border-radius: 4px; margin-bottom: 30px;">
+        <code style="color: var(--accent-color); font-size: 1.1rem; word-break: break-all;">
+          https://blog.rastrian.dev/rss.xml
+        </code>
+      </div>
+
+      <h2>📱 How to Subscribe</h2>
+      <ol style="line-height: 1.8;">
+        <li><strong>Get a newsreader app:</strong> Choose from Feedly, Inoreader, NetNewsWire, or The Old Reader</li>
+        <li><strong>Copy the feed URL above</strong></li>
+        <li><strong>Add to your newsreader:</strong> Look for "Subscribe", "Add Feed", or a "+" button</li>
+        <li><strong>Paste the URL</strong> and you're done!</li>
+      </ol>
+
+      <h2>⭐ Why Use RSS?</h2>
+      <ul style="line-height: 1.8;">
+        <li><strong>No algorithm:</strong> Get every post, no content filtering</li>
+        <li><strong>Privacy-friendly:</strong> No tracking, no email required</li>
+        <li><strong>All in one place:</strong> Read multiple blogs from one app</li>
+        <li><strong>No spam:</strong> Clean, organized content delivery</li>
+        <li><strong>You're in control:</strong> Easy to subscribe and unsubscribe</li>
+      </ul>
+
+      <div style="margin-top: 40px; padding: 20px; background: var(--code-bg); border-radius: 6px;">
+        <p style="margin: 0;"><strong>New to RSS?</strong> Check out <a href="https://aboutfeeds.com" style="color: var(--accent-color);">About Feeds</a> for a beginner-friendly guide to getting started with newsreaders and web feeds.</p>
+      </div>
+
+      <div style="margin-top: 30px; text-align: center;">
+        <a href="/rss.xml" style="display: inline-block; background: var(--accent-color); color: var(--bg-color); padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+          🔗 View RSS Feed
+        </a>
+      </div>
+    </div>
+  |} ~theme ()
 
