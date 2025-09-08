@@ -1,4 +1,4 @@
-FROM ocaml/opam:alpine-3.18-ocaml-5.1 AS builder
+FROM ocaml/opam:alpine-3.19-ocaml-5.1 AS builder
 
 USER root
 RUN apk add --no-cache \
@@ -11,14 +11,17 @@ RUN apk add --no-cache \
 
 USER opam
 
-RUN opam update && opam upgrade
+RUN opam update && opam upgrade && \
+    opam repository set-url default https://opam.ocaml.org && \
+    opam update
 
 WORKDIR /src
-COPY --chown=opam:opam . .
+COPY --chown=opam:opam dune-project blog.opam ./
 
-RUN opam install . --deps-only --verbose || \
-    (opam update && opam install . --deps-only --verbose) || \
-    (sleep 10 && opam install . --deps-only --verbose)
+RUN opam update && \
+    opam install . --deps-only --verbose
+
+COPY --chown=opam:opam . .
 RUN opam exec -- dune build --profile release
 
 FROM alpine:3.18

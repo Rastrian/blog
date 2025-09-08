@@ -7,6 +7,11 @@ let last_update = ref 0.0
 let cache_duration = 900.0 (* 15 minutes *)
 let posts_per_page = 3
 
+let get_theme_from_request request =
+  match Dream.cookie request "theme" with
+  | Some theme when theme = "light" || theme = "dark" -> theme
+  | _ -> "dark" (* default theme *)
+
 let get_posts () =
   let now = Unix.time () in
   if now -. !last_update > cache_duration then (
@@ -44,28 +49,32 @@ let () =
           | None -> 1
         with _ -> 1
       in
+      let theme = get_theme_from_request request in
       let* all_posts = get_posts () in
       let (posts, total_posts) = paginate_posts all_posts page posts_per_page in
-      html (Templates.home_page posts page total_posts posts_per_page)
+      html (Templates.home_page posts page total_posts posts_per_page theme)
     );
     
     get "/post/:slug" (fun request ->
       let slug = param request "slug" in
+      let theme = get_theme_from_request request in
       let* posts = get_posts () in
       match Github.find_issue_by_slug slug posts with
-      | Some issue -> html (Templates.post_page issue)
-      | None -> html ~status:`Not_Found Templates.not_found_page
+      | Some issue -> html (Templates.post_page issue theme)
+      | None -> html ~status:`Not_Found (Templates.not_found_page theme)
     );
     
-    get "/tags" (fun _ ->
+    get "/tags" (fun request ->
+      let theme = get_theme_from_request request in
       let* posts = get_posts () in
-      html (Templates.tags_page posts)
+      html (Templates.tags_page posts theme)
     );
     
     get "/tag/:tag" (fun request ->
       let tag = param request "tag" in
+      let theme = get_theme_from_request request in
       let* posts = get_posts () in
-      html (Templates.tag_page tag posts)
+      html (Templates.tag_page tag posts theme)
     );
     
     get "/rss.xml" (fun _ ->
@@ -74,8 +83,29 @@ let () =
       respond ~headers:[("Content-Type", "application/rss+xml; charset=utf-8")] rss_content
     );
     
-    get "/**" (fun _ ->
-      html ~status:`Not_Found Templates.not_found_page
+    get "/rss.xsl" (fun _ ->
+      let xsl_content = Templates.generate_rss_xsl () in
+      respond ~headers:[("Content-Type", "application/xsl+xml; charset=utf-8")] xsl_content
+    );
+    
+    get "/feed" (fun request ->
+      let theme = get_theme_from_request request in
+      html (Templates.rss_page theme)
+    );
+    
+    get "/api/theme/:theme" (fun request ->
+      let theme = param request "theme" in
+      if theme = "light" || theme = "dark" then
+        let* response = redirect request "/" in
+        Dream.set_cookie response request "theme" theme ~max_age:31536000.;
+        Lwt.return response
+      else
+        redirect request "/"
+    );
+    
+    get "/**" (fun request ->
+      let theme = get_theme_from_request request in
+      html ~status:`Not_Found (Templates.not_found_page theme)
     );
   ]
 
