@@ -1,0 +1,29 @@
+name: Build Check
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up OCaml
+      uses: ocaml/setup-ocaml@v2
+      with:
+        ocaml-compiler: 5.1.x
+        dune-cache: true
+
+    - name: Update opam and install dependencies
+      run: |
+        opam update
+        opam install . --deps-only --verbose
+
+    - name: Build project
+      run: opam exec -- dune build --profile release

@@ -419,24 +419,42 @@ img {
 |}
 
 let javascript = {|
-// Theme detection and switching
-function initTheme() {
-  const savedTheme = localStorage.getItem('theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-  
-  document.documentElement.setAttribute('data-theme', theme);
-  updateThemeButton(theme);
+// Cookie utilities
+function setCookie(name, value, days) {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
 }
 
+function getCookie(name) {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for(let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
+
+// Theme switching
 function toggleTheme() {
   const currentTheme = document.documentElement.getAttribute('data-theme');
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
   
+  // Update DOM immediately
   document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('theme', newTheme);
   updateThemeButton(newTheme);
   updateGiscusTheme(newTheme);
+  
+  // Send to server to set cookie via simple GET request
+  fetch('/api/theme/' + newTheme, {
+    method: 'GET'
+  }).catch(function(error) {
+    console.error('Error setting theme:', error);
+    // Fallback to setting cookie manually
+    setCookie('theme', newTheme, 365);
+  });
 }
 
 function updateGiscusTheme(theme) {
@@ -460,10 +478,8 @@ function updateThemeButton(theme) {
   }
 }
 
-// Initialize theme on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-  initTheme();
-  
   const themeButton = document.getElementById('theme-toggle');
   if (themeButton) {
     themeButton.addEventListener('click', toggleTheme);
@@ -476,9 +492,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 2000);
 });
 
-// Listen for system theme changes
+// Listen for system theme changes (only when no cookie is set)
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-  if (!localStorage.getItem('theme')) {
+  if (!getCookie('theme')) {
     const theme = e.matches ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
     updateThemeButton(theme);
@@ -487,9 +503,10 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fun
 });
 |}
 
-let layout ~title ~content ?(meta_tags="") () = 
+let layout ~title ~content ?(meta_tags="") ~theme () = 
+  let theme_button_text = if theme = "dark" then "☀️ Light" else "🌙 Dark" in
   Printf.sprintf {|<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="%s">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -503,7 +520,7 @@ let layout ~title ~content ?(meta_tags="") () =
     <div class="container">
         <header>
             <a href="/" class="site-title">~/rastrian/blog</a>
-            <button id="theme-toggle" class="theme-toggle">🌙 Dark</button>
+            <button id="theme-toggle" class="theme-toggle">%s</button>
         </header>
         <nav class="nav">
             <a href="https://rastrian.dev">Home</a>
@@ -525,7 +542,7 @@ let layout ~title ~content ?(meta_tags="") () =
     </div>
     <script>%s</script>
 </body>
-</html>|} title meta_tags css content javascript
+</html>|} theme title meta_tags css theme_button_text content javascript
 
 let format_date date_str =
   try
@@ -835,18 +852,18 @@ let render_pagination current_page total_posts per_page =
       </div>
     |} prev_link page_info next_link
 
-let home_page posts current_page total_posts per_page =
+let home_page posts current_page total_posts per_page theme =
   let posts_html = String.concat "\n" (List.map render_post_preview posts) in
   let pagination_html = render_pagination current_page total_posts per_page in
   let meta_tags = generate_blog_meta_tags () in
-  layout ~title:"rastrian blog" ~content:(posts_html ^ pagination_html) ~meta_tags ()
+  layout ~title:"rastrian blog" ~content:(posts_html ^ pagination_html) ~meta_tags ~theme ()
 
-let post_page post =
+let post_page post theme =
   let content = render_post_full post in
   let meta_tags = generate_post_meta_tags post in
-  layout ~title:(Printf.sprintf "%s - rastrian blog" post.title) ~content ~meta_tags ()
+  layout ~title:(Printf.sprintf "%s - rastrian blog" post.title) ~content ~meta_tags ~theme ()
 
-let tags_page posts =
+let tags_page posts theme =
   let all_tags = List.fold_left (fun acc post ->
     List.fold_left (fun acc tag -> 
       if List.mem tag acc || tag = "published" then acc else tag :: acc
@@ -863,18 +880,18 @@ let tags_page posts =
   layout ~title:"Tags - rastrian blog" ~content:(Printf.sprintf {|
     <h1>Tags</h1>
     <div>%s</div>
-  |} tags_html) ()
+  |} tags_html) ~theme ()
 
-let not_found_page = 
+let not_found_page theme = 
   layout ~title:"404 - Not Found" ~content:{|
     <h1>404 - Page Not Found</h1>
     <p>The page you're looking for doesn't exist.</p>
     <p><a href="/">← Back to home</a></p>
-  |} ()
+  |} ~theme ()
 
-let tag_page tag posts =
+let tag_page tag posts theme =
   if tag = "published" then
-    not_found_page
+    not_found_page theme
   else
     let filtered_posts = List.filter (fun post -> List.mem tag post.labels) posts in
     let posts_html = String.concat "\n" (List.map render_post_preview filtered_posts) in
@@ -882,5 +899,5 @@ let tag_page tag posts =
            ~content:(Printf.sprintf {|
       <h1>Posts tagged '%s'</h1>
       %s
-    |} tag posts_html) ()
+    |} tag posts_html) ~theme ()
 
