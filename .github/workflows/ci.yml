@@ -14,16 +14,35 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up OCaml
-      uses: ocaml/setup-ocaml@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: actions/cache@v4
       with:
-        ocaml-compiler: 5.1.x
-        dune-cache: true
+        path: /tmp/.buildx-cache
+        key: buildx-${{ runner.os }}-${{ hashFiles('Dockerfile', 'dune-project', '*.opam') }}
+        restore-keys: |
+          buildx-${{ runner.os }}-
 
-    - name: Update opam and install dependencies
+    - name: Build Docker builder stage with cache
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        target: builder
+        tags: blog-builder:latest
+        load: true
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+    - name: Move cache
       run: |
-        opam update
-        opam install . --deps-only --verbose
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-    - name: Build project
-      run: opam exec -- dune build --profile release
+    - name: Test build in container
+      run: |
+        docker run --rm -v ${{ github.workspace }}:/workspace blog-builder:latest sh -c "
+          cd /workspace &&
+          opam exec -- dune build --profile release
+        "
