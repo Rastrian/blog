@@ -4,7 +4,7 @@ open Dream
 let posts_cache = ref []
 let last_update = ref 0.0
 
-let cache_duration = 900.0 (* 15 minutes *)
+let cache_duration = 14400.0 (* 4 hours *)
 let posts_per_page = 3
 
 let get_theme_from_request request =
