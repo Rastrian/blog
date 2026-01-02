@@ -1000,7 +1000,7 @@ let generate_blog_meta_tags () =
 
 let generate_post_meta_tags post =
   let description = match post.body with
-    | Some body -> extract_description body 512
+    | Some body -> extract_description body 200
     | None -> "Read this post on Rastrian's blog about life, functional programming, and software development"
   in
   let post_url = Printf.sprintf "https://blog.rastrian.dev/post/%s" (create_slug post.title) in
