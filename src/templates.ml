@@ -550,6 +550,28 @@ code[class*="language-"] {
   border-radius: 3px !important;
   border: 1px solid var(--border-color) !important;
 }
+
+/* Mermaid diagram styling */
+.mermaid {
+  background: var(--code-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure Mermaid diagrams don't conflict with code blocks */
+pre code.language-mermaid,
+pre code.lang-mermaid {
+  display: none;
+}
 |}
 
 let javascript = {|
@@ -580,6 +602,7 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', newTheme);
   updateThemeButton(newTheme);
   updateGiscusTheme(newTheme);
+  updateMermaidTheme(newTheme);
   
   // Send to server to set cookie via simple GET request
   fetch('/api/theme/' + newTheme, {
@@ -602,6 +625,20 @@ function updateGiscusTheme(theme) {
         }
       }
     }, 'https://giscus.app');
+  }
+}
+
+function updateMermaidTheme(theme) {
+  // Re-render mermaid diagrams with new theme
+  if (window.mermaidInstance) {
+    const mermaidTheme = theme === 'dark' ? 'dark' : 'default';
+    window.mermaidInstance.initialize({ 
+      startOnLoad: false, 
+      theme: mermaidTheme,
+      securityLevel: 'loose',
+      flowchart: { useMaxWidth: true, htmlLabels: true }
+    });
+    window.mermaidInstance.run();
   }
 }
 
@@ -633,6 +670,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fun
     document.documentElement.setAttribute('data-theme', theme);
     updateThemeButton(theme);
     updateGiscusTheme(theme);
+    updateMermaidTheme(theme);
   }
 });
 |}
@@ -680,6 +718,41 @@ let layout ~title ~content ?(meta_tags="") ~theme () =
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script>%s</script>
+    <!-- Mermaid.js initialization (after DOM is ready) -->
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      
+      // Store mermaid instance globally for theme updates
+      window.mermaidInstance = mermaid;
+      
+      function initializeMermaid() {
+        const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
+        mermaid.initialize({ 
+          startOnLoad: true, 
+          theme: theme,
+          securityLevel: 'loose',
+          flowchart: { useMaxWidth: true, htmlLabels: true }
+        });
+        
+        // Find all code blocks with language-mermaid and convert them
+        document.querySelectorAll('pre code.language-mermaid, pre code.lang-mermaid').forEach(function(el) {
+          const mermaidCode = el.textContent;
+          const wrapper = document.createElement('div');
+          wrapper.className = 'mermaid';
+          wrapper.textContent = mermaidCode;
+          el.parentElement.replaceWith(wrapper);
+        });
+        
+        // Render all mermaid diagrams
+        mermaid.run();
+      }
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeMermaid);
+      } else {
+        initializeMermaid();
+      }
+    </script>
 </body>
 </html>|} theme title meta_tags css theme_button_text content javascript
 
@@ -747,6 +820,72 @@ let escape_xml text =
   let text = Str.global_replace (Str.regexp "'") "&#39;" text in
   text
 
+(* Simple base64 encoding for Mermaid diagrams *)
+let base64_encode s =
+  let base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" in
+  let encode_char n = String.make 1 base64_chars.[n] in
+  let rec encode acc i =
+    if i >= String.length s then acc
+    else
+      let byte1 = int_of_char s.[i] in
+      if i + 1 >= String.length s then
+        let b1 = encode_char ((byte1 lsr 2) land 63) in
+        let b2 = encode_char (((byte1 lsl 4) land 48)) in
+        acc ^ b1 ^ b2 ^ "=="
+      else if i + 2 >= String.length s then
+        let byte2 = int_of_char s.[i + 1] in
+        let b1 = encode_char ((byte1 lsr 2) land 63) in
+        let b2 = encode_char (((byte1 lsl 4) lor ((byte2 lsr 4) land 15)) land 63) in
+        let b3 = encode_char (((byte2 lsl 2) land 60)) in
+        acc ^ b1 ^ b2 ^ b3 ^ "="
+      else
+        let byte2 = int_of_char s.[i + 1] in
+        let byte3 = int_of_char s.[i + 2] in
+        let b1 = encode_char ((byte1 lsr 2) land 63) in
+        let b2 = encode_char (((byte1 lsl 4) lor ((byte2 lsr 4) land 15)) land 63) in
+        let b3 = encode_char (((byte2 lsl 2) lor ((byte3 lsr 6) land 3)) land 63) in
+        let b4 = encode_char (byte3 land 63) in
+        encode (acc ^ b1 ^ b2 ^ b3 ^ b4) (i + 3)
+  in
+  encode "" 0
+
+(* Convert Mermaid code blocks to images for RSS feed *)
+(* Processes markdown and replaces ```mermaid blocks with image tags before HTML conversion *)
+let convert_mermaid_in_markdown markdown =
+  let rec find_and_replace acc pos =
+    if pos >= String.length markdown then acc
+    else
+      (* Find ```mermaid or ```lang-mermaid *)
+      let mermaid_start = try Some (Str.search_forward (Str.regexp "```\\(mermaid\\|lang-mermaid\\)") markdown pos) with Not_found -> None in
+      match mermaid_start with
+      | None -> acc ^ (String.sub markdown pos (String.length markdown - pos))
+      | Some start ->
+          (* Calculate where the code starts (after ```mermaid or ```lang-mermaid) *)
+          let lang_match = try Str.matched_group 1 markdown with Not_found -> "mermaid" in
+          let lang_len = String.length lang_match in
+          let code_start = start + 3 + lang_len in
+          (* Skip newline if present *)
+          let code_start = if code_start < String.length markdown && markdown.[code_start] = '\n' then code_start + 1 else code_start in
+          (* Find the closing ``` *)
+          let code_end = try Some (Str.search_forward (Str.regexp "```") markdown code_start) with Not_found -> None in
+          match code_end with
+          | None -> acc ^ (String.sub markdown pos (String.length markdown - pos))
+          | Some end_pos ->
+              let mermaid_code = String.sub markdown code_start (end_pos - code_start) in
+              let trimmed_code = String.trim mermaid_code in
+              if String.length trimmed_code > 0 then
+                let base64_code = base64_encode trimmed_code in
+                let image_markdown = Printf.sprintf "\n\n![Mermaid diagram](https://mermaid.ink/img/%s)\n\n" base64_code in
+                let before_match = String.sub markdown pos (start - pos) in
+                let after_pos = end_pos + 3 in
+                find_and_replace (acc ^ before_match ^ image_markdown) after_pos
+              else
+                let before_match = String.sub markdown pos (start - pos) in
+                let after_pos = end_pos + 3 in
+                find_and_replace (acc ^ before_match) after_pos
+  in
+  find_and_replace "" 0
+
 let format_rss_date date_str =
   try
     (* Convert ISO 8601 to RFC 822 format *)
@@ -772,7 +911,10 @@ let format_rss_date date_str =
 let generate_rss_item post =
   let slug = create_slug post.title in
   let content = match post.body with
-    | Some body -> Cmarkit.Doc.of_string body |> Cmarkit_html.of_doc ~safe:false
+    | Some body -> 
+        (* Convert Mermaid code blocks to images before markdown conversion *)
+        let body_with_images = convert_mermaid_in_markdown body in
+        Cmarkit.Doc.of_string body_with_images |> Cmarkit_html.of_doc ~safe:false
     | None -> "No content available."
   in
   Printf.sprintf {|
