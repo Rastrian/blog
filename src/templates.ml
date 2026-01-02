@@ -673,6 +673,64 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', fun
     updateMermaidTheme(theme);
   }
 });
+
+// Copy RSS URL to clipboard
+function copyRssUrl() {
+  const rssUrl = 'https://blog.rastrian.dev/rss.xml';
+  const feedback = document.getElementById('copy-feedback');
+  const button = document.getElementById('copy-rss-btn');
+  
+  // Use the Clipboard API if available
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(rssUrl).then(function() {
+      showCopyFeedback(feedback, button);
+    }).catch(function(err) {
+      console.error('Failed to copy:', err);
+      fallbackCopy(rssUrl, feedback, button);
+    });
+  } else {
+    // Fallback for older browsers
+    fallbackCopy(rssUrl, feedback, button);
+  }
+}
+
+function fallbackCopy(text, feedback, button) {
+  // Create a temporary textarea element
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  
+  try {
+    const successful = document.execCommand('copy');
+    if (successful) {
+      showCopyFeedback(feedback, button);
+    } else {
+      alert('Failed to copy. Please copy manually: ' + text);
+    }
+  } catch (err) {
+    console.error('Fallback copy failed:', err);
+    alert('Failed to copy. Please copy manually: ' + text);
+  }
+  
+  document.body.removeChild(textarea);
+}
+
+function showCopyFeedback(feedback, button) {
+  if (feedback && button) {
+    feedback.style.display = 'block';
+    button.textContent = '✓ Copied!';
+    button.style.opacity = '0.8';
+    
+    setTimeout(function() {
+      feedback.style.display = 'none';
+      button.textContent = '📋 Copy';
+      button.style.opacity = '1';
+    }, 2000);
+  }
+}
 |}
 
 let layout ~title ~content ?(meta_tags="") ~theme () = 
@@ -1328,10 +1386,18 @@ let rss_page theme =
       </div>
 
       <h2>🔗 Feed URL</h2>
-      <div style="background: var(--secondary-color); border: 1px solid var(--border-color); padding: 15px; border-radius: 4px; margin-bottom: 30px;">
-        <code style="color: var(--accent-color); font-size: 1.1rem; word-break: break-all;">
-          https://blog.rastrian.dev/rss.xml
-        </code>
+      <div style="background: var(--secondary-color); border: 1px solid var(--border-color); padding: 15px; border-radius: 4px; margin-bottom: 30px; position: relative;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <code id="rss-url" style="color: var(--accent-color); font-size: 1.1rem; word-break: break-all; flex: 1; min-width: 200px;">
+            https://blog.rastrian.dev/rss.xml
+          </code>
+          <button id="copy-rss-btn" onclick="copyRssUrl()" style="background: var(--accent-color); color: var(--bg-color); border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 0.9rem; font-weight: bold; white-space: nowrap; transition: opacity 0.3s;">
+            📋 Copy
+          </button>
+        </div>
+        <div id="copy-feedback" style="display: none; color: var(--accent-color); font-size: 0.9rem; margin-top: 8px; text-align: center;">
+          ✓ Copied to clipboard!
+        </div>
       </div>
 
       <h2>📱 How to Subscribe</h2>
