@@ -763,7 +763,7 @@ let layout ~title ~content ?(meta_tags="") ~theme () =
         <main>%s</main>
         <footer class="footer">
             <div class="footer-content">
-                <p>© 2025 Luis Vaz (Rastrian). Crafted with ❤️ and lots of ☕</p>
+                <p>© 2026 Luis Vaz (Rastrian). Crafted with ❤️ and lots of ☕</p>
                 <p>
                     <a href="https://github.com/rastrian/blog" target="_blank">
                         <span class="github-icon">⭐</span> Open Source on GitHub
