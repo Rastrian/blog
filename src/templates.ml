@@ -253,6 +253,14 @@ img {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+.post-content iframe {
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  display: block;
+  margin: 1rem auto;
+}
+
 .nav {
   margin: 2rem 0;
 }
