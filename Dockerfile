@@ -24,7 +24,7 @@ RUN opam update && \
 COPY --chown=opam:opam . .
 RUN opam exec -- dune build --profile release
 
-FROM alpine:3.18
+FROM alpine
 
 RUN apk add --no-cache \
     openssl \
