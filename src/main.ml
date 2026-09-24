@@ -37,6 +37,17 @@ let paginate_posts posts page per_page =
     let page_posts = take_range [] 0 per_page posts in
     (page_posts, total_posts)
 
+let cors_origin request =
+  let allowed = [
+    "https://rastrian.dev";
+    "http://localhost:8099";
+    "http://127.0.0.1:8099";
+    "http://192.168.1.140:8099";
+  ] in
+  match Dream.header request "Origin" with
+  | Some origin when List.mem origin allowed -> ("Access-Control-Allow-Origin", origin)
+  | _ -> ("Access-Control-Allow-Origin", "https://rastrian.dev")
+
 let () =
   run ~interface:"0.0.0.0" ~port:8080
   @@ logger
@@ -77,12 +88,12 @@ let () =
       html (Templates.tag_page tag posts theme)
     );
     
-    get "/rss.xml" (fun _ ->
+    get "/rss.xml" (fun request ->
       let* posts = get_posts () in
       let rss_content = Templates.generate_rss_feed posts in
       respond ~headers:[
         ("Content-Type", "application/rss+xml; charset=utf-8");
-        ("Access-Control-Allow-Origin", "https://rastrian.dev");
+        cors_origin request;
       ] rss_content
     );
     
