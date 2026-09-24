@@ -80,7 +80,10 @@ let () =
     get "/rss.xml" (fun _ ->
       let* posts = get_posts () in
       let rss_content = Templates.generate_rss_feed posts in
-      respond ~headers:[("Content-Type", "application/rss+xml; charset=utf-8")] rss_content
+      respond ~headers:[
+        ("Content-Type", "application/rss+xml; charset=utf-8");
+        ("Access-Control-Allow-Origin", "https://rastrian.dev");
+      ] rss_content
     );
     
     get "/rss.xsl" (fun _ ->
