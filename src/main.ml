@@ -9,8 +9,10 @@ let posts_per_page = 3
 
 let get_theme_from_request request =
   match Dream.cookie request "theme" with
-  | Some theme when theme = "light" || theme = "dark" -> theme
-  | _ -> "dark" (* default theme *)
+  | Some theme when theme = "light" || theme = "dark" -> Some theme
+  | _ -> None
+
+let theme_or_auto = function Some t -> t | None -> "auto"
 
 let get_posts () =
   let now = Unix.time () in
@@ -60,7 +62,7 @@ let () =
           | None -> 1
         with _ -> 1
       in
-      let theme = get_theme_from_request request in
+      let theme = theme_or_auto (get_theme_from_request request) in
       let* all_posts = get_posts () in
       let (posts, total_posts) = paginate_posts all_posts page posts_per_page in
       html (Templates.home_page posts page total_posts posts_per_page theme)
@@ -68,7 +70,7 @@ let () =
     
     get "/post/:slug" (fun request ->
       let slug = param request "slug" in
-      let theme = get_theme_from_request request in
+      let theme = theme_or_auto (get_theme_from_request request) in
       let* posts = get_posts () in
       match Github.find_issue_by_slug slug posts with
       | Some issue -> html (Templates.post_page issue theme)
@@ -76,14 +78,14 @@ let () =
     );
     
     get "/tags" (fun request ->
-      let theme = get_theme_from_request request in
+      let theme = theme_or_auto (get_theme_from_request request) in
       let* posts = get_posts () in
       html (Templates.tags_page posts theme)
     );
     
     get "/tag/:tag" (fun request ->
       let tag = param request "tag" in
-      let theme = get_theme_from_request request in
+      let theme = theme_or_auto (get_theme_from_request request) in
       let* posts = get_posts () in
       html (Templates.tag_page tag posts theme)
     );
@@ -103,7 +105,7 @@ let () =
     );
     
     get "/feed" (fun request ->
-      let theme = get_theme_from_request request in
+      let theme = theme_or_auto (get_theme_from_request request) in
       html (Templates.rss_page theme)
     );
     
@@ -118,7 +120,7 @@ let () =
     );
     
     get "/**" (fun request ->
-      let theme = get_theme_from_request request in
+      let theme = theme_or_auto (get_theme_from_request request) in
       html ~status:`Not_Found (Templates.not_found_page theme)
     );
   ]
