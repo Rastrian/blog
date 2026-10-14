@@ -1109,7 +1109,9 @@ let javascript = {|
 function setCookie(name, value, days) {
   const expires = new Date();
   expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-  document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+  // Domain-wide cookie: the theme choice syncs with rastrian.dev (the
+  // landing reads it pre-paint and mirrors it into its localStorage).
+  document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/;domain=.rastrian.dev';
 }
 
 function getCookie(name) {
