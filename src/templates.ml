@@ -1838,7 +1838,7 @@ let generate_blog_meta_tags () =
     <!-- Open Graph -->
     <meta property="og:title" content="Rastrian's Blog | Life & Tech">
     <meta property="og:description" content="Personal blog about functional programming, software development, and tech insights">
-    <meta property="og:image" content="https://avatars.githubusercontent.com/u/10719452">
+    <meta property="og:image" content="https://rastrian.dev/assets/profile.png">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://blog.rastrian.dev">
     
@@ -1848,7 +1848,7 @@ let generate_blog_meta_tags () =
     <meta name="twitter:creator" content="@TheRastrian">
     <meta name="twitter:title" content="Rastrian's Blog | Life & Tech">
     <meta name="twitter:description" content="Personal blog about life, functional programming, software development, and tech insights">
-    <meta name="twitter:image" content="https://avatars.githubusercontent.com/u/10719452">
+    <meta name="twitter:image" content="https://rastrian.dev/assets/profile.png">
   |}
 
 let generate_post_meta_tags post =
@@ -1857,7 +1857,7 @@ let generate_post_meta_tags post =
     | None -> "Read this post on Rastrian's blog about life, functional programming, and software development"
   in
   let post_url = Printf.sprintf "https://blog.rastrian.dev/post/%s" (create_slug post.title) in
-  let image = "https://avatars.githubusercontent.com/u/10719452" in
+  let image = "https://rastrian.dev/assets/profile.png" in
   Printf.sprintf {|
     <!-- Open Graph -->
     <meta property="og:title" content="%s">
