@@ -996,7 +996,11 @@ pre code.lang-mermaid {
 }
 
 /* ===== Contact section (landing style) ===== */
-.contact-inner { text-align: center; }
+.contact-inner {
+  padding-block: clamp(3.5rem, 9vw, 6rem);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
 .contact-inner .section-head { margin-bottom: 1.4rem; }
 .contact-inner .kicker-row { justify-content: center; }
 .contact-inner .kicker-row::after { display: none; }
