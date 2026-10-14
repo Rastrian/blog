@@ -132,8 +132,23 @@ body {
   font-size: 1rem;
   background: transparent;
   padding-top: 64px;
+  position: relative;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Static radial ember tint behind the page head (same atmosphere as the
+   landing hero); theme-native via --accent-soft, so it works in both themes */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 34rem;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(46rem 26rem at 50% 0%, var(--accent-soft), transparent 65%);
 }
 
 ::selection {
@@ -161,6 +176,8 @@ img {
 }
 
 .container {
+  position: relative;
+  z-index: 1;
   max-width: 840px;
   margin: 0 auto;
   padding: 0 28px;
