@@ -1298,10 +1298,10 @@ let layout ~title ~content ?(meta_tags="") ~theme () =
                     <svg class="i-close" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
                 </button>
                 <ul class="nav-links" id="nav-links">
-                    <li><a href="https://rastrian.dev">Home</a></li>
+                    <li><a href="https://rastrian.dev">home</a></li>
                     <li><a href="/">posts</a></li>
                     <li><a href="/tags">tags</a></li>
-                    <li><a href="/feed">feed</a></li>
+                    <li><a href="/feed">rss feed</a></li>
                 </ul>
                 <button id="theme-toggle" type="button" class="icon-btn theme-toggle" aria-label="Toggle dark mode">
                     <svg class="i-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -1362,7 +1362,7 @@ let layout ~title ~content ?(meta_tags="") ~theme () =
                         </a>
                     </li>
                     <li>
-                        <a href="/rss.xml" aria-label="Blog RSS feed">
+                        <a href="/feed" aria-label="Blog RSS feed">
                             <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.5 17.4a2.1 2.1 0 100 4.2 2.1 2.1 0 000-4.2z"/><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4.5 10.2a9.3 9.3 0 0 1 9.3 9.3"/><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4.5 3.6a15.9 15.9 0 0 1 15.9 15.9"/></svg>
                         </a>
                     </li>
