@@ -2,11 +2,11 @@ open Github
 
 let css = {|
 /* ==========================================================================
-   rastrian/blog - design system portado da landing rastrian.dev
-   direcao: gotica / ember / manuscrito
+   rastrian/blog - design system ported from the rastrian.dev landing
+   direction: gothic / ember / manuscript
    ========================================================================== */
 
-/* First paint no <html>, nao no <body> (anti-FOUC) */
+/* First paint on <html>, not on <body> (anti-FOUC) */
 html {
   background: #f5f3ef;
 }
@@ -15,13 +15,11 @@ html[data-theme="dark"] {
   background: #0d0817;
 }
 
-@media (prefers-color-scheme: dark) {
-  html:not([data-theme="light"]) {
-    background: #0d0817;
-  }
+html:not([data-theme="light"]) {
+  background: #0d0817;
 }
 
-/* ===== Design tokens (copia exata da landing aprovada) ===== */
+/* ===== Design tokens (exact copy of the approved landing) ===== */
 :root {
   color-scheme: light;
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -67,31 +65,29 @@ html[data-theme="dark"] {
   --nav-bg: rgba(13, 8, 23, 0.84);
 }
 
-/* Fallback no-JS: replica o bloco dark quando o sistema e dark e nao ha escolha explicita */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --bg: #0d0817;
-    --bg-2: #170f2a;
-    --surface: rgba(255,255,255,0.045);
-    --text: rgba(255,255,255,0.92);
-    --text-soft: rgba(255,255,255,0.72);
-    --text-faint: rgba(255,255,255,0.60);
-    --heading: rgba(255,255,255,0.96);
-    --border: rgba(255,255,255,0.09);
-    --border-strong: rgba(255,255,255,0.19);
-    --accent: #ff9347;
-    --accent-strong: #ffa55e;
-    --accent-text: #ff9347;
-    --accent-soft: rgba(255,147,71,0.10);
-    --focus: #ff9347;
-    --shadow-1: 0 1px 2px rgba(0,0,0,0.30), 0 10px 28px rgba(0,0,0,0.36);
-    --shadow-ember: 0 8px 28px rgba(255,147,71,0.22);
+/* No-JS / auto default: dark whenever no explicit data-theme is set */
+:root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --bg: #0d0817;
+  --bg-2: #170f2a;
+  --surface: rgba(255,255,255,0.045);
+  --text: rgba(255,255,255,0.92);
+  --text-soft: rgba(255,255,255,0.72);
+  --text-faint: rgba(255,255,255,0.60);
+  --heading: rgba(255,255,255,0.96);
+  --border: rgba(255,255,255,0.09);
+  --border-strong: rgba(255,255,255,0.19);
+  --accent: #ff9347;
+  --accent-strong: #ffa55e;
+  --accent-text: #ff9347;
+  --accent-soft: rgba(255,147,71,0.10);
+  --focus: #ff9347;
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.30), 0 10px 28px rgba(0,0,0,0.36);
+  --shadow-ember: 0 8px 28px rgba(255,147,71,0.22);
   --nav-bg: rgba(13, 8, 23, 0.84);
-  }
 }
 
-/* Paleta de sintaxe (Prism) derivada do tema; mesmas regras dos tokens acima */
+/* Prism syntax palette derived from the theme; same rules as the tokens above */
 :root {
   --syn-comment: #5f5573;
   --syn-punct: #4d4363;
@@ -112,16 +108,14 @@ html[data-theme="dark"] {
   --syn-plain: rgba(255,255,255,0.92);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --syn-comment: rgba(255,255,255,0.60);
-    --syn-punct: rgba(255,255,255,0.72);
-    --syn-string: #e8c28a;
-    --syn-keyword: #ffa55e;
-    --syn-function: #c4a5ff;
-    --syn-number: #ff9347;
-    --syn-plain: rgba(255,255,255,0.92);
-  }
+:root:not([data-theme="light"]) {
+  --syn-comment: rgba(255,255,255,0.60);
+  --syn-punct: rgba(255,255,255,0.72);
+  --syn-string: #e8c28a;
+  --syn-keyword: #ffa55e;
+  --syn-function: #c4a5ff;
+  --syn-number: #ff9347;
+  --syn-plain: rgba(255,255,255,0.92);
 }
 
 /* ===== Base ===== */
@@ -175,7 +169,7 @@ img {
   min-height: 100vh;
 }
 
-/* Inner: largura/padding de container sem o layout flex-page (uso no contato e footer) */
+/* Inner: container width/padding without the flex-page layout (used by contact and footer) */
 .inner {
   max-width: 840px;
   margin: 0 auto;
@@ -188,8 +182,7 @@ main {
   padding-bottom: 4rem;
 }
 
-/* ===== Header estatico ===== */
-/* ===== Navbar (identica a landing: barra fixa, blur, mono + diamante de active) ===== */
+/* ===== Navbar (matches the landing: fixed bar, blur, mono + active diamond) ===== */
 .site-nav {
   position: fixed;
   top: 0;
@@ -295,7 +288,7 @@ main {
   .nav-links a { padding: 0.7rem 0.75rem; font-size: 1rem; }
 }
 
-/* Ornamento gotico: hairline + diamante ember */
+/* Gothic ornament: hairline + ember diamond */
 .ornament {
   margin-top: 1.1rem;
   text-align: center;
@@ -313,7 +306,7 @@ main {
 [data-theme="dark"] .theme-toggle .i-moon { display: none; }
 [data-theme="dark"] .theme-toggle .i-sun { display: block; }
 
-/* ===== Cabecalho de secao (kicker + titulo) ===== */
+/* ===== Section header (kicker + title) ===== */
 .section-head {
   padding: 2.8rem 0 1.6rem;
 }
@@ -339,7 +332,7 @@ main {
   line-height: 1.15;
 }
 
-/* ===== Marcadores diamante ===== */
+/* ===== Diamond markers ===== */
 .diamond {
   display: inline-block;
   width: 6px;
@@ -359,7 +352,7 @@ main {
   margin: 0 0.6rem;
 }
 
-/* ===== Lista de posts (padrao Writing da landing) ===== */
+/* ===== Post list (landing Writing pattern) ===== */
 .post-list {
   border-top: 1px solid var(--border);
 }
@@ -396,7 +389,7 @@ main {
   text-decoration: none;
 }
 
-/* Seta de link: SVG, desliza 3px no hover */
+/* Link arrow: SVG, slides 3px on hover */
 .link-arrow {
   display: inline-flex;
   align-items: center;
@@ -679,7 +672,7 @@ a.pagination-btn:hover {
   border-radius: 6px;
 }
 
-/* ===== Prism: cores locais, coerentes com a paleta ===== */
+/* ===== Prism: local colors, consistent with the palette ===== */
 code[class*="language-"],
 pre[class*="language-"] {
   font-family: var(--mono);
@@ -794,7 +787,7 @@ pre code.lang-mermaid {
   display: none;
 }
 
-/* ===== Pagina de tags (checklist textual) ===== */
+/* ===== Tags page (textual checklist) ===== */
 .tag-list {
   list-style: none;
   border-top: 1px solid var(--border);
@@ -825,7 +818,7 @@ pre code.lang-mermaid {
   font-size: 0.8rem;
 }
 
-/* ===== Pagina de feed ===== */
+/* ===== Feed page ===== */
 .feed-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -960,7 +953,7 @@ pre code.lang-mermaid {
 }
 
 /* ===== Footer ===== */
-/* ===== Footer (landing style: ornamento centrado + inner flex) ===== */
+/* ===== Footer (landing style: centered ornament + inner flex) ===== */
 .site-footer {
   border-top: 1px solid var(--border);
   padding-block: 2.1rem;
@@ -985,7 +978,7 @@ pre code.lang-mermaid {
   text-decoration: none;
 }
 
-/* ===== Secao contato (landing style) ===== */
+/* ===== Contact section (landing style) ===== */
 .contact-inner { text-align: center; }
 .contact-inner .section-head { margin-bottom: 1.4rem; }
 .contact-inner .kicker-row { justify-content: center; }
@@ -1035,7 +1028,7 @@ pre code.lang-mermaid {
   box-shadow: var(--shadow-1);
 }
 
-/* orn da landing reutilizado no footer */
+/* landing ornament reused in the footer */
 .orn {
   display: block;
   width: 140px;
@@ -1118,8 +1111,8 @@ function toggleTheme() {
   updateGiscusTheme(newTheme);
   updateMermaidTheme(newTheme);
 
-  // Persistencia client-side: cookie plain (legivel pelo boot script),
-  // gravado sincronamente para sobreviver a navegacao imediata.
+  // Client-side persistence: plain cookie (readable by the boot script),
+  // written synchronously so it survives immediate navigation.
   setCookie('theme', newTheme, 365);
 }
 
@@ -1157,7 +1150,7 @@ document.addEventListener('DOMContentLoaded', function() {
     themeButton.addEventListener('click', toggleTheme);
   }
 
-  // Menu mobile (burger): igual a landing
+  // Mobile menu (burger): same as the landing
   const nav = document.getElementById('site-nav');
   const navToggle = document.querySelector('.nav-toggle');
   if (nav && navToggle) {
@@ -1168,7 +1161,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Marcador de pagina ativa (diamante ember, igual scroll-spy da landing)
+  // Active page marker (ember diamond, like the landing scroll-spy)
   var path = window.location.pathname;
   document.querySelectorAll('.nav-links a').forEach(function(a) {
     var href = a.getAttribute('href');
@@ -1186,16 +1179,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     updateGiscusTheme(currentTheme);
   }, 2000);
-});
-
-// Listen for system theme changes (only when no cookie is set)
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-  if (!getCookie('theme')) {
-    const theme = e.matches ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', theme);
-    updateGiscusTheme(theme);
-    updateMermaidTheme(theme);
-  }
 });
 
 // Copy RSS URL to clipboard
@@ -1258,7 +1241,7 @@ function showCopyFeedback(feedback, button) {
 let theme_boot_script = {|
 (function () {
   var m = document.cookie.match(/(?:^|; )theme=(light|dark)(?:;|$)/);
-  var t = m ? m[1] : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  var t = m ? m[1] : 'dark';
   document.documentElement.setAttribute('data-theme', t);
 })();
 |}
@@ -1444,7 +1427,7 @@ let format_date date_str =
     | _ -> date_str
   with _ -> date_str
 
-(* Data curta "Oct 2026" para kickers e lista de posts (visual Writing) *)
+(* Short date "Oct 2026" for kickers and the post list (Writing look) *)
 let format_date_short date_str =
   try
     let date_part = List.hd (String.split_on_char 'T' date_str) in
@@ -1459,7 +1442,7 @@ let format_date_short date_str =
     | _ -> date_part
   with _ -> date_str
 
-(* Seta de link sempre em SVG, com o path do design system aprovado *)
+(* Link arrow always as SVG, with the approved design system path *)
 let arrow_icon = {|<span class="link-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg></span>|}
 
 let extract_description text max_length =
