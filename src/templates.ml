@@ -1163,19 +1163,9 @@ function updateMermaidTheme(theme) {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
   const themeButton = document.getElementById('theme-toggle');
-  if (themeButton) {
+  if (themeButton && !themeButton.dataset.themeBound) {
+    themeButton.dataset.themeBound = '1';
     themeButton.addEventListener('click', toggleTheme);
-  }
-
-  // Mobile menu (burger): same as the landing
-  const nav = document.getElementById('site-nav');
-  const navToggle = document.querySelector('.nav-toggle');
-  if (nav && navToggle) {
-    navToggle.addEventListener('click', function() {
-      const open = nav.classList.toggle('open');
-      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-    });
   }
 
   // Active page marker (ember diamond, like the landing scroll-spy)
@@ -1197,6 +1187,22 @@ document.addEventListener('DOMContentLoaded', function() {
     updateGiscusTheme(currentTheme);
   }, 2000);
 });
+
+// Mobile menu (burger): delegated on document so script re-execution
+// (Cloudflare Rocket Loader rewriting/deferring) can never bind twice
+// and toggle the menu open+closed within one click.
+if (!window.__blogNavBound) {
+  window.__blogNavBound = true;
+  document.addEventListener('click', function(e) {
+    var toggle = e.target.closest ? e.target.closest('.nav-toggle') : null;
+    if (!toggle) return;
+    var nav = document.getElementById('site-nav');
+    if (!nav) return;
+    var open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  });
+}
 
 // Copy RSS URL to clipboard
 function copyRssUrl() {
