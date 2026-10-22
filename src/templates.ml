@@ -1285,7 +1285,7 @@ let layout ~title ~content ?(meta_tags="") ~theme () =
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>%s</title>
-    <link rel="icon" href="https://avatars.githubusercontent.com/u/10719452">
+    <link rel="icon" type="image/png" href="https://rastrian.dev/assets/favicon.png">
     <link rel="alternate" type="application/rss+xml" title="Rastrian Blog RSS Feed" href="/rss.xml">
     <script data-cfasync="false">%s</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
