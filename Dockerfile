@@ -1,4 +1,4 @@
-FROM ocaml/opam:alpine-3.19-ocaml-5.1 AS builder
+FROM ocaml/opam:alpine-3.19-ocaml-5.3 AS builder
 
 USER root
 RUN apk add --no-cache \
