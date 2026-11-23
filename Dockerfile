@@ -1,4 +1,7 @@
-FROM ocaml/opam:alpine-3.19-ocaml-5.3 AS builder
+# alpine must stay >= 3.21 for ocaml 5.3: alpine-3.19-ocaml-5.3 ships a
+# 5.3.0+trunk dev snapshot (ocamlc -config without ocamlc_cflags) that
+# breaks modern opam deps at build time.
+FROM ocaml/opam:alpine-3.21-ocaml-5.3 AS builder
 
 USER root
 RUN apk add --no-cache \
