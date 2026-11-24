@@ -9,6 +9,15 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Builders based on the real OCaml 5.3.0 release (alpine-3.21+) break
+      # the cohttp HTTP client: the Lwt/libev event loop goes blind on the
+      # GitHub API socket (connection sits in CLOSE_WAIT, requests hang
+      # forever) and the binary segfaults on newer runtimes. The 5.3.0+trunk
+      # snapshot from the alpine-3.19 builder is the toolchain that works in
+      # production. Re-evaluate only with a dedicated dependency-bisect lane.
+      - dependency-name: "ocaml/opam"
+        versions: [">=3.20"]
 
   - package-ecosystem: github-actions
     directory: /
