@@ -34,7 +34,7 @@ RUN opam install . --deps-only
 COPY --chown=opam:opam . .
 RUN opam exec -- dune build --profile release
 
-FROM alpine:3.21
+FROM alpine:3.24
 
 RUN apk add --no-cache \
     openssl \
